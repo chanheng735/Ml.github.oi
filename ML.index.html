@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ML Machinery Master Control</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM CDNs -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel Standalone JSX Compiler -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+
+  <!-- React Mount Point -->
+  <div id="root"></div>
+
+  <!-- React Component Code -->
+  <script type="text/babel">
+    const { useState, useMemo, useEffect } = React;
+
+    // Initial Master Fleet Dataset
+    const initialMachineryData = [
+      { id: 1, no: 1, size: 'G', type: 'អាប៊ុល (Bulldozer)', code: 'BUL 01', driver: 'T1', qty: 1, standardHour: 7, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 2, no: 2, size: 'G', type: 'អាបិល (Bulldozer)', code: 'BUL 02', driver: 'No', qty: 1, standardHour: 7, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 3, no: 3, size: '-', type: 'ឡានស្ទូច (Crane Truck)', code: 'CRT_01', driver: 'T6', qty: 1, standardHour: 15, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 4, no: 4, size: 'ធំ', type: 'ឡានស្ទូច (Crane Truck)', code: 'CRT 02', driver: 'T8', qty: 1, standardHour: 13, managedBy: 'អឿន សម្បត្តិ', project: 'GA' },
+      { id: 5, no: 5, size: 'ធំ', type: 'ឡានស្ទូច (Crane Truck)', code: 'CRT 03', driver: 'T11', qty: 1, standardHour: 15, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 6, no: 6, size: 'ធំ', type: 'ឡានស្ទូច (Crane Truck)', code: 'CRT 04', driver: 'T13', qty: 1, standardHour: 13, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 7, no: 7, size: 'ធំ', type: 'ឡានស្ទូច (Crane Truck)', code: 'CRT 05', driver: 'T15', qty: 1, standardHour: 7, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 8, no: 8, size: 'ធំ', type: 'ឡានបែន (Dump Truck)', code: 'DUT 01', driver: 'T7', qty: 1, standardHour: 13, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 9, no: 9, size: '-', type: 'ឡានទឹក (Water Truck)', code: 'DUT 02', driver: 'T9', qty: 1, standardHour: 8, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 10, no: 10, size: '-', type: 'ឡានបែន (Dump Truck)', code: 'DUT 03', driver: 'No', qty: 1, standardHour: 8, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 11, no: 11, size: 'តូច', type: 'ឡានបែន (Dump Truck)', code: 'DUT 04', driver: 'No', qty: 1, standardHour: 8, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 12, no: 12, size: '-', type: 'អេស្កាវ៉ាទ័រ (Excavator)', code: 'EXC 01', driver: 'T4', qty: 1, standardHour: 26, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 13, no: 13, size: 'i', type: 'អេស្កាវ៉ាទ័រ (Excavator)', code: 'EXC 02', driver: 'T12', qty: 1, standardHour: 20, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 14, no: 14, size: 'ធំ', type: 'អេស្កាវ៉ាទ័រ (Excavator)', code: 'EXC 03', driver: 'T15', qty: 1, standardHour: 20, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 15, no: 15, size: 'តូច', type: 'អេស្កាវ៉ាទ័រ (Excavator)', code: 'EXC 04', driver: 'T14', qty: 1, standardHour: 2, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 16, no: 16, size: '-', type: 'អេស្កាវ៉ាទ័រ (Excavator)', code: 'EXC 05', driver: 'No', qty: 1, standardHour: 2, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 17, no: 17, size: '-', type: 'ហូតលីប (Forklift)', code: 'FOR 01', driver: 'No', qty: 1, standardHour: 4, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 18, no: 18, size: 'ធំ', type: 'ឡ (Road Roller)', code: 'ROL 01', driver: 'T16', qty: 1, standardHour: 19, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 19, no: 19, size: 'ធំ', type: 'សាស័រ (Wheel Loader)', code: 'SAS 01', driver: 'T3', qty: 1, standardHour: 21, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 20, no: 20, size: 'ធំ', type: 'សាស័រ (Wheel Loader)', code: 'SAS 02', driver: 'T5', qty: 1, standardHour: 21, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 21, no: 21, size: 'ធំ', type: 'សាស័រ (Wheel Loader)', code: 'SAS 03', driver: 'T2', qty: 1, standardHour: 21, managedBy: 'អឿន សម្បត្តិ', project: 'GA' },
+      { id: 22, no: 22, size: '-', type: 'ត្រាក់ទ័រ (Tractor)', code: 'TRT 01', driver: 'T10', qty: 1, standardHour: 4, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 23, no: 23, size: 'តូច', type: 'ត្រាក់ទ័រ (Tractor)', code: 'TRT 02', driver: 'No', qty: 1, standardHour: 3, managedBy: 'អឿន សម្បត្តិ', project: 'MC' },
+      { id: 24, no: 27, size: 'តូច', type: 'ត្រាក់ទ័រ (Tractor)', code: 'TRT 03', driver: 'No', qty: 1, standardHour: 3, managedBy: 'អឿន សម្បត្តិ', project: 'MC' }
+    ];
+
+    // Initial Refuel Logs
+    const initialRefuelLogs = [
+      {
+        id: 101,
+        date: new Date().toISOString().slice(0, 10),
+        time: '07:30',
+        code: 'BUL 01',
+        type: 'អាប៊ុល (Bulldozer)',
+        size: 'G',
+        driver: 'T1',
+        managedBy: 'អឿន សម្បត្តិ',
+        project: 'MC',
+        liters: 56,
+        notes: 'Morning full refuel'
+      },
+      {
+        id: 102,
+        date: new Date().toISOString().slice(0, 10),
+        time: '08:15',
+        code: 'EXC 01',
+        type: 'អេស្កាវ៉ាទ័រ (Excavator)',
+        size: '-',
+        driver: 'T4',
+        managedBy: 'អឿន សម្បត្តិ',
+        project: 'MC',
+        liters: 150,
+        notes: 'Shift start refuel'
+      }
+    ];
+
+    function App() {
+      // LocalStorage Persistence State
+      const [data, setData] = useState(() => {
+        try {
+          const saved = localStorage.getItem('ml_machinery_data');
+          return saved ? JSON.parse(saved) : initialMachineryData;
+        } catch (e) {
+          return initialMachineryData;
+        }
+      });
+
+      const [refuelLogs, setRefuelLogs] = useState(() => {
+        try {
+          const saved = localStorage.getItem('ml_refuel_logs');
+          return saved ? JSON.parse(saved) : initialRefuelLogs;
+        } catch (e) {
+          return initialRefuelLogs;
+        }
+      });
+
+      useEffect(() => {
+        try { localStorage.setItem('ml_machinery_data', JSON.stringify(data)); } catch (e) {}
+      }, [data]);
+
+      useEffect(() => {
+        try { localStorage.setItem('ml_refuel_logs', JSON.stringify(refuelLogs)); } catch (e) {}
+      }, [refuelLogs]);
+
+      // UI States
+      const [searchTerm, setSearchTerm] = useState('');
+      const [projectFilter, setProjectFilter] = useState('ALL');
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [isModalOpen, setIsModalOpen] = useState(false);
+      const [editingItem, setEditingItem] = useState(null);
+
+      const [isRefuelModalOpen, setIsRefuelModalOpen] = useState(false);
+      const [editingRefuelLog, setEditingRefuelLog] = useState(null);
+
+      const [deleteConfirmModal, setDeleteConfirmModal] = useState({ isOpen: false, type: null, id: null, title: '' });
+      const [isCustomRefuel, setIsCustomRefuel] = useState(false);
+      const [saveCustomToFleet, setSaveCustomToFleet] = useState(false);
+
+      // Simulator State
+      const [calcCode, setCalcCode] = useState('BUL 01');
+      const [calcHours, setCalcHours] = useState(8);
+      const [calcDays, setCalcDays] = useState(1);
+
+      // Forms State
+      const [refuelFormData, setRefuelFormData] = useState({
+        date: new Date().toISOString().slice(0, 10),
+        time: new Date().toTimeString().slice(0, 5),
+        code: 'BUL 01',
+        type: 'អាប៊ុល (Bulldozer)',
+        size: 'G',
+        driver: 'T1',
+        managedBy: 'អឿន សម្បត្តិ',
+        project: 'MC',
+        liters: 56,
+        notes: ''
+      });
+
+      const [formData, setFormData] = useState({
+        no: '', size: 'ធំ', type: 'អាប៊ុល (Bulldozer)', code: '', driver: 'No', qty: 1, standardHour: 10, managedBy: 'អឿន សម្បត្តិ', project: 'MC'
+      });
+
+      // Reset Defaults Handler
+      const handleResetDefaults = () => {
+        triggerDeleteConfirm('reset', null, 'Reset all vehicles and refuel logs back to factory defaults');
+      };
+
+      // Select Machine Code Logic
+      const handleRefuelCodeSelect = (selectedCode) => {
+        if (selectedCode === 'OTHER_CUSTOM') {
+          setIsCustomRefuel(true);
+          setRefuelFormData(prev => ({
+            ...prev,
+            code: 'CAR-NEW',
+            type: 'ឡាន / គ្រឿងចក្រផ្សេងៗ (Other Car)',
+            size: 'ធំ',
+            driver: 'T-Custom',
+            managedBy: 'អឿន សម្បត្តិ',
+            project: 'MC',
+            liters: 50
+          }));
+          return;
+        }
+
+        setIsCustomRefuel(false);
+        const matchedMachine = data.find(m => m.code === selectedCode);
+        if (matchedMachine) {
+          setRefuelFormData(prev => ({
+            ...prev,
+            code: matchedMachine.code,
+            type: matchedMachine.type,
+            size: matchedMachine.size,
+            driver: matchedMachine.driver !== 'No' ? matchedMachine.driver : 'No',
+            managedBy: matchedMachine.managedBy,
+            project: matchedMachine.project,
+            liters: matchedMachine.standardHour * 8
+          }));
+        } else {
+          setRefuelFormData(prev => ({ ...prev, code: selectedCode }));
+        }
+      };
+
+      // Open Refuel Modal
+      const handleOpenRefuelModal = (log = null) => {
+        if (log) {
+          setEditingRefuelLog(log);
+          setIsCustomRefuel(false);
+          setSaveCustomToFleet(false);
+          setRefuelFormData({ ...log });
+        } else {
+          setEditingRefuelLog(null);
+          setIsCustomRefuel(false);
+          setSaveCustomToFleet(false);
+          const defaultCode = data[0]?.code || 'BUL 01';
+          const matchedMachine = data.find(m => m.code === defaultCode);
+          setRefuelFormData({
+            date: new Date().toISOString().slice(0, 10),
+            time: new Date().toTimeString().slice(0, 5),
+            code: defaultCode,
+            type: matchedMachine ? matchedMachine.type : 'អាប៊ុល (Bulldozer)',
+            size: matchedMachine ? matchedMachine.size : 'G',
+            driver: matchedMachine ? matchedMachine.driver : 'T1',
+            managedBy: matchedMachine ? matchedMachine.managedBy : 'អឿន សម្បត្តិ',
+            project: matchedMachine ? matchedMachine.project : 'MC',
+            liters: matchedMachine ? matchedMachine.standardHour * 8 : 50,
+            notes: ''
+          });
+        }
+        setIsRefuelModalOpen(true);
+      };
+
+      // Save Refuel Entry
+      const handleSaveRefuelLog = (e) => {
+        e.preventDefault();
+
+        if (isCustomRefuel && saveCustomToFleet) {
+          const existing = data.find(m => m.code.toLowerCase() === refuelFormData.code.toLowerCase());
+          if (!existing) {
+            const nextNo = data.length > 0 ? Math.max(...data.map(d => Number(d.no) || 0)) + 1 : 1;
+            const newMachine = {
+              id: Date.now(),
+              no: nextNo,
+              size: refuelFormData.size || 'ធំ',
+              type: refuelFormData.type || 'Other Vehicle',
+              code: refuelFormData.code,
+              driver: refuelFormData.driver || 'No',
+              qty: 1,
+              standardHour: Math.round(Number(refuelFormData.liters) / 8) || 5,
+              managedBy: refuelFormData.managedBy || 'អឿន សម្បត្តិ',
+              project: refuelFormData.project || 'MC'
+            };
+            setData(prev => [...prev, newMachine]);
+          }
+        }
+
+        if (editingRefuelLog) {
+          setRefuelLogs(prevLogs => prevLogs.map(item => String(item.id) === String(editingRefuelLog.id) ? { ...refuelFormData, id: editingRefuelLog.id, liters: Number(refuelFormData.liters) } : item));
+        } else {
+          const newEntry = {
+            ...refuelFormData,
+            id: Date.now(),
+            liters: Number(refuelFormData.liters)
+          };
+          setRefuelLogs(prevLogs => [newEntry, ...prevLogs]);
+        }
+        setIsRefuelModalOpen(false);
+      };
+
+      // Delete Confirm Handlers
+      const triggerDeleteConfirm = (type, id, title = '') => {
+        setDeleteConfirmModal({ isOpen: true, type, id, title });
+      };
+
+      const handleExecuteDelete = () => {
+        const { type, id } = deleteConfirmModal;
+        if (type === 'refuel') {
+          setRefuelLogs(prevLogs => prevLogs.filter(item => String(item.id) !== String(id)));
+        } else if (type === 'fleet') {
+          setData(prevData => prevData.filter(item => String(item.id) !== String(id)));
+        } else if (type === 'reset') {
+          setData(initialMachineryData);
+          setRefuelLogs(initialRefuelLogs);
+          localStorage.removeItem('ml_machinery_data');
+          localStorage.removeItem('ml_refuel_logs');
+        }
+        setDeleteConfirmModal({ isOpen: false, type: null, id: null, title: '' });
+      };
+
+      // Filtered Tables
+      const filteredData = useMemo(() => {
+        return data.filter(item => {
+          const matchesSearch = item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                item.driver.toLowerCase().includes(searchTerm.toLowerCase());
+          const matchesProject = projectFilter === 'ALL' || item.project === projectFilter;
+          return matchesSearch && matchesProject;
+        });
+      }, [data, searchTerm, projectFilter]);
+
+      const filteredRefuelLogs = useMemo(() => {
+        return refuelLogs.filter(log => {
+          const matchesSearch = log.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                log.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                log.driver.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                log.date.includes(searchTerm);
+          const matchesProject = projectFilter === 'ALL' || log.project === projectFilter;
+          return matchesSearch && matchesProject;
+        });
+      }, [refuelLogs, searchTerm, projectFilter]);
+
+      // Metrics Summary
+      const metrics = useMemo(() => {
+        const totalCount = data.reduce((acc, curr) => acc + Number(curr.qty), 0);
+        const totalDailyFuel = data.reduce((acc, curr) => acc + (Number(curr.standardHour) * 8 * Number(curr.qty)), 0);
+        const projectMC = data.filter(d => d.project === 'MC');
+        const projectGA = data.filter(d => d.project === 'GA');
+        const fuelMC = projectMC.reduce((acc, curr) => acc + (Number(curr.standardHour) * 8), 0);
+        const fuelGA = projectGA.reduce((acc, curr) => acc + (Number(curr.standardHour) * 8), 0);
+        const assignedDrivers = data.filter(d => d.driver !== 'No').length;
+        
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const todayRefuelTotal = refuelLogs
+          .filter(l => l.date === todayStr)
+          .reduce((acc, curr) => acc + Number(curr.liters || 0), 0);
+
+        return {
+          totalCount,
+          totalDailyFuel,
+          mcCount: projectMC.length,
+          gaCount: projectGA.length,
+          fuelMC,
+          fuelGA,
+          assignedDrivers,
+          todayRefuelTotal,
+          totalRefuelEntries: refuelLogs.length
+        };
+      }, [data, refuelLogs]);
+
+      // Machinery Handlers
+      const handleOpenModal = (item = null) => {
+        if (item) {
+          setEditingItem(item);
+          setFormData({ ...item });
+        } else {
+          setEditingItem(null);
+          const nextNo = data.length > 0 ? Math.max(...data.map(d => Number(d.no) || 0)) + 1 : 1;
+          setFormData({
+            no: nextNo, size: 'ធំ', type: 'អាប៊ុល (Bulldozer)', code: `NEW ${nextNo}`, driver: 'No', qty: 1, standardHour: 10, managedBy: 'អឿន សម្បត្តិ', project: 'MC'
+          });
+        }
+        setIsModalOpen(true);
+      };
+
+      const handleSaveItem = (e) => {
+        e.preventDefault();
+        if (editingItem) {
+          setData(prev => prev.map(item => String(item.id) === String(editingItem.id) ? { ...formData, id: editingItem.id } : item));
+        } else {
+          setData(prev => [...prev, { ...formData, id: Date.now() }]);
+        }
+        setIsModalOpen(false);
+      };
+
+      // Export CSV
+      const handleExportRefuelCSV = () => {
+        const headers = ["Date,Time,Vehicle Code,Type,Size,Driver,Managed By,Project,Diesel Liters Refueled,Notes\n"];
+        const rows = filteredRefuelLogs.map(log => 
+          `"${log.date}","${log.time}","${log.code}","${log.type}","${log.size}","${log.driver}","${log.managedBy}","${log.project}",${log.liters},"${log.notes || ''}"`
+        );
+        const blob = new Blob([headers.concat(rows.join('\n')).join('')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `Refuel_Log_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      const handleExportFleetCSV = () => {
+        const headers = ["No,Size,Machinery Type,Code,Driver,Qty,Std Liters/Hour,Liters/8 Hours,Managed By,Project\n"];
+        const rows = filteredData.map(item => 
+          `${item.no},"${item.size}","${item.type}","${item.code}","${item.driver}",${item.qty},${item.standardHour},${item.standardHour * 8},"${item.managedBy}","${item.project}"`
+        );
+        const blob = new Blob([headers.concat(rows.join('\n')).join('')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `Fleet_Master_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      const calculatedSimulatorFuel = useMemo(() => {
+        const matched = data.find(m => m.code === calcCode);
+        if (!matched) return 0;
+        return matched.standardHour * calcHours * calcDays;
+      }, [data, calcCode, calcHours, calcDays]);
+
+      return (
+        <div className="min-h-screen bg-slate-900 text-slate-100 font-sans pb-12">
+          {/* Header */}
+          <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-30 shadow-lg">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center space-x-3">
+                <div className="bg-amber-500 p-2.5 rounded-xl text-slate-900 font-bold shadow-md shadow-amber-500/20">
+                  <i className="fa-solid fa-truck text-2xl"></i>
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                    ML Machinery Master Control
+                    <span className="text-xs font-normal bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                      Diesel Fuel Fleet
+                    </span>
+                  </h1>
+                  <p className="text-xs text-slate-400">គ្រប់គ្រងគ្រឿងចក្រ និងការប្រើប្រាស់ប្រេងម៉ាស៊ូត (Code Vehicle & Diesel fuel)</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                <button
+                  onClick={() => handleOpenRefuelModal()}
+                  className="flex-1 md:flex-initial bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2.5 rounded-lg transition-all shadow-lg shadow-emerald-900/30 border border-emerald-400/30 flex items-center justify-center gap-2"
+                >
+                  <i className="fa-solid fa-gas-pump"></i>
+                  <span>Refuel with Diesel</span>
+                </button>
+                <button
+                  onClick={() => handleOpenModal()}
+                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-4 py-2.5 rounded-lg transition-all shadow-md shadow-amber-500/10 flex items-center justify-center gap-2"
+                >
+                  <i className="fa-solid fa-plus"></i>
+                  <span className="hidden sm:inline">Add Vehicle</span>
+                </button>
+                <button
+                  onClick={handleResetDefaults}
+                  title="Reset to Defaults"
+                  className="bg-slate-700 hover:bg-slate-600 text-slate-300 p-2.5 rounded-lg border border-slate-600"
+                >
+                  <i className="fa-solid fa-rotate-left"></i>
+                </button>
+              </div>
+            </div>
+
+            {/* Navigation Tabs */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 border-t border-slate-700/60 overflow-x-auto">
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`py-3 px-4 font-medium text-sm flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors ${
+                  activeTab === 'dashboard' ? 'border-amber-500 text-amber-400 bg-slate-800/80' : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <i className="fa-solid fa-table-cells-large"></i> Master Fleet Inventory
+              </button>
+              <button
+                onClick={() => setActiveTab('refuel')}
+                className={`py-3 px-4 font-medium text-sm flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors ${
+                  activeTab === 'refuel' ? 'border-emerald-500 text-emerald-400 bg-slate-800/80' : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <i className="fa-solid fa-clock-rotate-left"></i> Daily Refuel Log
+                <span className="ml-1 px-1.5 py-0.2 text-xs bg-slate-700 text-slate-300 rounded-full">{metrics.totalRefuelEntries}</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('simulator')}
+                className={`py-3 px-4 font-medium text-sm flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors ${
+                  activeTab === 'simulator' ? 'border-amber-500 text-amber-400 bg-slate-800/80' : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <i className="fa-solid fa-calculator"></i> Fuel Simulator
+              </button>
+            </div>
+          </header>
+
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+            
+            {/* Analytics Metric Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="bg-slate-800/80 border border-slate-700 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase font-semibold text-slate-400">Total Machinery</p>
+                  <h3 className="text-2xl font-bold text-white mt-1">{metrics.totalCount} <span className="text-sm font-normal text-slate-400">Units</span></h3>
+                  <p className="text-xs text-amber-400 mt-1"><i className="fa-solid fa-user"></i> {metrics.assignedDrivers} Operators</p>
+                </div>
+                <div className="bg-amber-500/10 text-amber-400 p-3 rounded-lg border border-amber-500/20"><i className="fa-solid fa-truck text-2xl"></i></div>
+              </div>
+
+              <div className="bg-slate-800/80 border border-slate-700 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase font-semibold text-slate-400">Est. Std Daily Fuel</p>
+                  <h3 className="text-2xl font-bold text-amber-400 mt-1">{metrics.totalDailyFuel.toLocaleString()} <span className="text-sm font-normal text-slate-400">Liters</span></h3>
+                  <p className="text-xs text-slate-400 mt-1">8h Standard Operations</p>
+                </div>
+                <div className="bg-amber-500/10 text-amber-400 p-3 rounded-lg border border-amber-500/20"><i className="fa-solid fa-gas-pump text-2xl"></i></div>
+              </div>
+
+              <div className="bg-slate-800/80 border border-slate-700 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase font-semibold text-slate-400">Today's Refueled Fuel</p>
+                  <h3 className="text-2xl font-bold text-emerald-400 mt-1">{metrics.todayRefuelTotal.toLocaleString()} <span className="text-sm font-normal text-slate-400">Liters</span></h3>
+                  <p className="text-xs text-slate-400 mt-1">{new Date().toISOString().slice(0, 10)}</p>
+                </div>
+                <div className="bg-emerald-500/10 text-emerald-400 p-3 rounded-lg border border-emerald-500/20"><i className="fa-solid fa-droplet text-2xl"></i></div>
+              </div>
+
+              <div className="bg-slate-800/80 border border-slate-700 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase font-semibold text-slate-400">Projects Breakdown</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-lg font-bold text-amber-400">MC: {metrics.mcCount}</span>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-lg font-bold text-blue-400">GA: {metrics.gaCount}</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">MC ({metrics.fuelMC}L) - GA ({metrics.fuelGA}L)</p>
+                </div>
+                <div className="bg-blue-500/10 text-blue-400 p-3 rounded-lg border border-blue-500/20"><i className="fa-solid fa-hard-hat text-2xl"></i></div>
+              </div>
+            </div>
+
+            {/* Filter Toolbar */}
+            <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="relative w-full md:w-96">
+                <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input
+                  type="text"
+                  placeholder="Search code, vehicle, driver..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 text-sm"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                <div className="flex bg-slate-900 p-1 rounded-lg border border-slate-700">
+                  {['ALL', 'MC', 'GA'].map((proj) => (
+                    <button
+                      key={proj}
+                      onClick={() => setProjectFilter(proj)}
+                      className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
+                        projectFilter === proj ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      {proj}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={activeTab === 'refuel' ? handleExportRefuelCSV : handleExportFleetCSV}
+                  className="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 border border-slate-600"
+                >
+                  <i className="fa-solid fa-download"></i> Export CSV
+                </button>
+              </div>
+            </div>
+
+            {/* TAB 1: MASTER FLEET */}
+            {activeTab === 'dashboard' && (
+              <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow-xl">
+                <div className="px-6 py-4 border-b border-slate-700 bg-slate-800/50">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <i className="fa-solid fa-truck text-amber-500"></i> Master Fleet Control Table
+                  </h2>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-slate-300">
+                    <thead className="bg-slate-900/80 text-xs uppercase text-slate-400 border-b border-slate-700 font-semibold">
+                      <tr>
+                        <th className="py-3 px-4">No</th>
+                        <th className="py-3 px-4">Size</th>
+                        <th className="py-3 px-4">Machinery Type</th>
+                        <th className="py-3 px-4">Code</th>
+                        <th className="py-3 px-4">Driver</th>
+                        <th className="py-3 px-4 text-center">Qty</th>
+                        <th className="py-3 px-4 text-right">Std L/h</th>
+                        <th className="py-3 px-4 text-right">Liters/8h</th>
+                        <th className="py-3 px-4">Managed By</th>
+                        <th className="py-3 px-4 text-center">Project</th>
+                        <th className="py-3 px-4 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700/60">
+                      {filteredData.map((item) => (
+                        <tr key={item.id} className="hover:bg-slate-750 transition-colors">
+                          <td className="py-3 px-4 font-mono text-slate-400">{item.no}</td>
+                          <td className="py-3 px-4"><span className="px-2 py-0.5 rounded text-xs bg-slate-700">{item.size || '-'}</span></td>
+                          <td className="py-3 px-4 font-medium text-white">{item.type}</td>
+                          <td className="py-3 px-4"><span className="font-mono bg-amber-500/10 text-amber-400 font-bold px-2 py-1 rounded border border-amber-500/20">{item.code}</span></td>
+                          <td className="py-3 px-4">{item.driver}</td>
+                          <td className="py-3 px-4 text-center">{item.qty}</td>
+                          <td className="py-3 px-4 text-right font-mono text-amber-300">{item.standardHour} L</td>
+                          <td className="py-3 px-4 text-right font-mono font-bold text-emerald-400">{item.standardHour * 8} L</td>
+                          <td className="py-3 px-4">{item.managedBy}</td>
+                          <td className="py-3 px-4 text-center">
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${item.project === 'MC' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'}`}>{item.project}</span>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center space-x-2">
+                              <button onClick={() => handleOpenModal(item)} className="p-1.5 bg-slate-700 hover:bg-slate-600 text-amber-400 rounded"><i className="fa-solid fa-pen-to-square"></i></button>
+                              <button onClick={() => triggerDeleteConfirm('fleet', item.id, `${item.code} (${item.type})`)} className="p-1.5 bg-slate-700 hover:bg-slate-600 text-rose-400 rounded"><i className="fa-solid fa-trash"></i></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: REFUEL LOGS */}
+            {activeTab === 'refuel' && (
+              <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow-xl">
+                <div className="px-6 py-4 border-b border-slate-700 bg-slate-800/50 flex justify-between items-center">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <i className="fa-solid fa-gas-pump text-emerald-400"></i> Daily Diesel Refueling Log History
+                  </h2>
+                  <button onClick={() => handleOpenRefuelModal()} className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <i className="fa-solid fa-plus"></i> Record Refuel
+                  </button>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-slate-300">
+                    <thead className="bg-slate-900/80 text-xs uppercase text-slate-400 border-b border-slate-700 font-semibold">
+                      <tr>
+                        <th className="py-3 px-4">Date & Time</th>
+                        <th className="py-3 px-4">Code / Driver</th>
+                        <th className="py-3 px-4">Type</th>
+                        <th className="py-3 px-4">Size</th>
+                        <th className="py-3 px-4 text-right">Liters Refueled</th>
+                        <th className="py-3 px-4">Managed By</th>
+                        <th className="py-3 px-4 text-center">Project</th>
+                        <th className="py-3 px-4 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700/60">
+                      {filteredRefuelLogs.map((log) => (
+                        <tr key={log.id} className="hover:bg-slate-750 transition-colors">
+                          <td className="py-3 px-4 font-mono text-xs">{log.date} {log.time}</td>
+                          <td className="py-3 px-4">
+                            <span className="font-mono bg-amber-500/10 text-amber-400 font-bold px-2 py-0.5 rounded text-xs">{log.code}</span>
+                            <span className="text-xs text-slate-400 ml-2">({log.driver})</span>
+                          </td>
+                          <td className="py-3 px-4 font-medium text-slate-200">{log.type}</td>
+                          <td className="py-3 px-4"><span className="px-2 py-0.5 rounded text-xs bg-slate-700">{log.size || '-'}</span></td>
+                          <td className="py-3 px-4 text-right font-mono font-bold text-emerald-400 text-base">+{log.liters} L</td>
+                          <td className="py-3 px-4">{log.managedBy}</td>
+                          <td className="py-3 px-4 text-center"><span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-400">{log.project}</span></td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center space-x-2">
+                              <button onClick={() => handleOpenRefuelModal(log)} className="p-1.5 bg-slate-700 hover:bg-slate-600 text-emerald-400 rounded"><i className="fa-solid fa-pen-to-square"></i></button>
+                              <button onClick={() => triggerDeleteConfirm('refuel', log.id, `${log.code} - ${log.liters}L on ${log.date}`)} className="p-1.5 bg-slate-700 hover:bg-slate-600 text-rose-400 rounded"><i className="fa-solid fa-trash"></i></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: SIMULATOR */}
+            {activeTab === 'simulator' && (
+              <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl max-w-2xl mx-auto">
+                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <i className="fa-solid fa-calculator text-amber-500"></i> Diesel Dispatch Calculator
+                </h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs uppercase font-semibold text-slate-400 mb-1">Select Machinery</label>
+                    <select value={calcCode} onChange={(e) => setCalcCode(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm font-mono text-amber-400">
+                      {data.map((m) => (
+                        <option key={m.id} value={m.code}>{m.code} ({m.driver}) - {m.type} [{m.standardHour} L/h]</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs uppercase font-semibold text-slate-400 mb-1">Operating Hours/Day</label>
+                      <input type="number" value={calcHours} onChange={(e) => setCalcHours(Number(e.target.value))} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs uppercase font-semibold text-slate-400 mb-1">Days</label>
+                      <input type="number" value={calcDays} onChange={(e) => setCalcDays(Number(e.target.value))} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm" />
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-700 mt-4">
+                    <p className="text-xs text-slate-400 uppercase font-semibold">Calculated Fuel Required</p>
+                    <div className="text-4xl font-extrabold text-emerald-400 mt-2 font-mono">
+                      {calculatedSimulatorFuel.toLocaleString()} <span className="text-lg font-normal text-slate-400">Liters</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </main>
+
+          {/* REFUEL MODAL */}
+          {isRefuelModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+              <div className="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-lg overflow-hidden shadow-2xl p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-700 pb-3">
+                  <h3 className="text-lg font-bold text-white"><i className="fa-solid fa-droplet text-emerald-400"></i> Refuel Vehicle</h3>
+                  <button onClick={() => setIsRefuelModalOpen(false)} className="text-slate-400 hover:text-white"><i className="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <form onSubmit={handleSaveRefuelLog} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-400">Date</label>
+                      <input type="date" value={refuelFormData.date} onChange={(e) => setRefuelFormData(prev => ({ ...prev, date: e.target.value }))} className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm" required />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-400">Time</label>
+                      <input type="time" value={refuelFormData.time} onChange={(e) => setRefuelFormData(prev => ({ ...prev, time: e.target.value }))} className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm" required />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400">Machine Code</label>
+                    <select value={refuelFormData.code} onChange={(e) => handleRefuelCodeSelect(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-amber-400 font-mono">
+                      {data.map(m => <option key={m.id} value={m.code}>{m.code} ({m.driver}) - {m.type}</option>)}
+                      <option value="OTHER_CUSTOM">+ Custom Vehicle</option>
+                    </select>
+                  </div>
+
+                  <div className="p-3 bg-slate-900 rounded border border-emerald-500/40">
+                    <label className="block text-xs font-bold text-emerald-400 mb-1">Refueled Diesel (Liters)</label>
+                    <input type="number" value={refuelFormData.liters} onChange={(e) => setRefuelFormData(prev => ({ ...prev, liters: e.target.value }))} className="w-full bg-slate-950 border border-emerald-500/50 rounded p-2 text-2xl font-bold font-mono text-emerald-300" min="1" required />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button type="button" onClick={() => setIsRefuelModalOpen(false)} className="px-4 py-2 bg-slate-700 text-slate-300 rounded text-sm">Cancel</button>
+                    <button type="submit" className="px-5 py-2 bg-emerald-600 text-white rounded text-sm font-semibold">Save Refuel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* CUSTOM DELETE CONFIRMATION MODAL */}
+          {deleteConfirmModal.isOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+              <div className="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6">
+                <h3 className="text-lg font-bold text-white mb-2"><i className="fa-solid fa-triangle-exclamation text-rose-500 mr-2"></i> Confirm Delete</h3>
+                <p className="text-sm text-slate-300 mb-4">{deleteConfirmModal.title || 'Are you sure you want to delete this record?'}</p>
+                <div className="flex justify-end gap-3">
+                  <button onClick={() => setDeleteConfirmModal({ isOpen: false })} className="px-4 py-2 bg-slate-700 text-slate-300 rounded text-sm">Cancel</button>
+                  <button onClick={handleExecuteDelete} className="px-4 py-2 bg-rose-600 text-white rounded text-sm font-semibold">Delete Permanently</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
